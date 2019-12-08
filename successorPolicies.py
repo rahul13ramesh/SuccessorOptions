@@ -1,66 +1,86 @@
-#!/usr/bin/env python3
-"""
-Get the policies for the Successor-options
-"""
-
-import matplotlib
-import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 from copy import deepcopy
-from multiprocessing import Pool
 
 
 from laplacian import Laplacian
 from successor import Successor
 from env.env import gridWorld1
 from support.qlearner import SimpleQLearner
+from support.smdpqlearner import SimpleQLearnerOverOptions
 
-
-plt.switch_backend('agg')
-srModel = None
-global srModel, env, globNum
-
-def buildSRPolicy(j):
-    global srModel, env, globNum
-    print(j, globNum)
-    titers = [int(10e5), int(20e5), int(50e6), int(50e6)]
-    md = srModel.medoids[j]
-    pt = srModel.keyInd[srModel.validMap[md]]
-    rew = srModel.successor[pt]
-    Qlearner = SimpleQLearner(env, rew, srModel.keyInd)
-    Qlearner.train(titers[globNum-1])
-    Qlearner.plotPolicy("images/policies" + str(globNum) + "/srpolicy" + str(j) + ".png")
-    Qlearner.savePolicy("data/dat" + str(globNum) + "/policies/srpolicy" + str(j) + ".csv")
 
 def main():
-    parser = argparse.ArgumentParser(description='Get SR policies')
-    parser.add_argument('--cluster', type=int, default=2)
-    parser.add_argument('--norm', type=int, default=0)
-    args = parser.parse_args()
+    titers = [int(10e5), int(5e3), int(5e3), int(5e3)]
 
-    NUM_CORES = 4
+    numMod = [10, 4, 7, 5]
 
-    #  The iterations for training Q-learning
-    numMod = [4, 5, 10, 10]
-    for num in range(1, 5):
-        print("Env : " + str(num))
-        global srModel, env, globNum
-        env = gridWorld1(size=num)
-        globNum = num
-        srModel = Successor(env)
-        srModel.loadSuccessor(
-            "data/dat" + str(num) + "/successor" + str(num) + ".csv")
+    env_num = 4
+    assert(env_num >= 1 and env_num <= 4)
 
-        srModel.clusterRepresentation(
-            numMod[num-1], "images/tmp/sr.png",
-            args.cluster, args.norm)
-        srModel.saveLabels('data/dat' + str(num) + "/successorLabels"
-                           + str(num) + ".pkl")
+    print("Env : " + str(num))
+    env = gridWorld1(size=num)
+    print("goal ", env.goal)
+    srModel = Successor(env)
+    render = False
 
-        # Parallelism for faster training
-        procPool = Pool(NUM_CORES)
-        procPool.map(buildSRPolicy, range(len(srModel.medoids)))
+    #  options are unavailable in first round 
+    optionsAvailable = False
+
+    #  Each incremental iteratio
+    for itera in range(9):
+        srModel.getSuccessor(optionsAvailable=optionsAvailable, render=render)
+        srModel.getValidSuccessor()
+        srModel.getReachedSuccessor()
+        srModel.plotSuccessorMagnitudes("images/magnitudes/" + str(itera) + ".png")
+
+        room1 = deepcopy(env.room)
+
+        randomState = []
+        for i in range(20):
+            while True:
+                x = np.random.randint(env.height)
+                y = np.random.randint(env.width)
+                if env.room[x][y] == 0:
+                    break
+
+            randomState.append(srModel.validKeyInd[tuple([x, y])])
+
+        # If final iteration, run full successor representatio
+        if itera >= 8:
+            srModel.getRareStateSuccessor(final=True)
+        # Otherwise, cluster SR of states that are not used frequently
+        else:
+            srModel.getRareStateSuccessor()
+        srModel.clusterRepresentation(numMod[num-1], "images/inc-goals/sr" + str(itera) + ".png", 2, 0)
+
+        print("size", srModel.successor.shape)
+        curMedoids = []
+
+        for j, md in enumerate(srModel.medoids):
+            print(j)
+
+            rew = srModel.validSuccessor[srModel.validKeyInd[srModel.reachedRevMap[md]]]
+
+            Qlearner = SimpleQLearner(env, rew, srModel.keyInd)
+            if itera >= 8:
+                Qlearner.train(int(5e4))
+            else:
+                Qlearner.train(titers[num-1])
+            Qlearner.plotPolicy("images/policies" + str(num) + "/explorepolicy" + str(j) + ".png")
+            Qlearner.savePolicy("data/dat" + str(num) + "/policies/explorepolicy" + str(j) + ".csv")
+
+            ind = srModel.reachedRevMap[md]
+
+            plot_ind = srModel.keyInd[ind]
+            srModel.plotSuccessorState(
+                plot_ind, "images/sr" + str(num) + "/sr2d" + str(j) + ".png",
+                "images/sr" + str(num) + "/sr3d" + str(j) + ".png")
+
+            curMedoids.append(md)
+
+        optionsAvailable = True
+
 
 if __name__ == '__main__':
     main()
