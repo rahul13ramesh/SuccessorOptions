@@ -347,3 +347,187 @@ class SmdpQlearner(object):
         fp.close()
 
 
+class SimpleQLearnerOverOptions(object):
+    def __init__(self, env, actSize=5, optSize=10, gamma=0.9999, optionPath=None, eigen=False):
+        self.env = env
+        self.gamma = gamma
+        self.testNum = 0
+        self.plot = False
+        self.eigen = eigen
+        self.actionSize = actSize
+        self.optSize = optSize
+        self.stateSize = (self.env.height * self.env.width)
+        self.Q = np.zeros((self.stateSize, self.actionSize))
+
+        self.loadOptions(optionPath)
+
+    def loadOptions(self, path):
+        """
+        Load the Q-values(option policy) of options into self.Qopt
+        """
+        self.Qopt = []
+        if self.eigen:
+            prefix = "eigen"
+        else:
+            prefix = "sr"
+
+        for i in range(self.optSize):
+            filePath = path + prefix + "policy" + str(i) + ".csv"
+            fp = open(filePath, "rb")
+            curOptQvals, stateMap = pickle.load(fp)
+            fp.close()
+
+            self.Qopt.append(deepcopy(curOptQvals))
+
+        if self.optSize != 0:
+            self.stateMap = deepcopy(stateMap)
+        else:
+            filePath = path + prefix + "policy0.csv"
+            fp = open(filePath, "rb")
+            curOptQvals, stateMap = pickle.load(fp)
+            fp.close()
+            self.stateMap = deepcopy(stateMap)
+
+    def train(self, num_episodes=int(500), policyPath="tmp"):
+
+        EPS_START = 1
+        EPS_END = 0
+        alpha = 0.9
+        allRet = []
+        behavior_opt = np.arange(self.actionSize + len(self.Qopt))
+
+        for i in tqdm(range(num_episodes)):
+
+            steps = 0
+            ret = 0
+            state = self.stateMap[tuple(self.env.reset())]
+            prevState = int(state)
+            while True:
+
+                option_sampled = np.random.choice(behavior_opt)
+
+                # sampled an option, run it till it terminates
+                if option_sampled >= self.actionSize:
+
+                    #print("following option policy now...")
+                    while True:
+
+                        act = self.getGreedyQOption(prevState, option_sampled - self.actionSize)
+                        if act == 0: #prevState == maxState:
+                            #print("option successfully completed", act, maxState, option_sampled)
+                            break
+                        else:
+                            state, rew = self.env.step(act)
+                            steps += 1
+                            #self.env.render()
+
+                            state = self.stateMap[tuple(state)]
+                            actNext = self.getGreedyQ(state)
+
+                            self.Q[prevState, act] = (1 - alpha) * self.Q[prevState, act] + \
+                                alpha * (rew + self.gamma * self.Q[state, actNext])
+
+                            prevState = int(state)
+                            if self.env.isDone() or steps >= 100:
+                                break
+
+                # sampled a primitive action
+                else:
+                    #print("following primitive actions")
+                    act = option_sampled
+                    state, rew = self.env.step(act)
+                    steps += 1
+
+                    state = self.stateMap[tuple(state)]
+                    actNext = self.getGreedyQ(state)
+
+                    self.Q[prevState, act] = (1 - alpha) * self.Q[prevState, act] + \
+                        alpha * (rew + self.gamma * self.Q[state, actNext])
+
+                    prevState = int(state)
+
+                if self.env.isDone() or steps >= 100:
+                    break
+
+        mu, var = self.test(policyPath)
+        print("mean reward", mu)
+        return self.Q
+
+    def test(self, policyPath):
+        self.testNum += 1
+        envTest = deepcopy(self.env)
+        envTest.setRender()
+
+        allRet = []
+        for i in range(3):
+            state = self.stateMap[tuple(envTest.reset())]
+
+            ret = 0.0
+            steps = 0
+            MAXSTEPS = 50
+            while steps <= MAXSTEPS:
+                act = self.getGreedyQ(state)
+                if act < self.actionSize:
+                    state, rew = envTest.step(act)
+                    envTest.render()
+                    if self.plot and i == 0:
+                        envTest.plotState(policyPath + "/tmp" + str(self.testNum) + "/")
+                    steps += 1
+                    state = self.stateMap[tuple(state)]
+
+                    ret = ret + self.gamma**(steps) * rew
+                    done = envTest.isDone()
+                    if done or steps > MAXSTEPS:
+                        break
+
+                else:
+                    optAct = self.getGreedyQopt(state, act)
+                    doneFlag = False
+
+                    #  Execute option until you reach terminal state
+                    while self.Qopt[act-self.actionSize][state, optAct] > 0:
+
+                        state, rew = envTest.step(optAct)
+                        envTest.render()
+                        if self.plot and i == 0:
+                            envTest.plotState(policyPath + "/tmp" + str(self.testNum) + "/")
+                        steps += 1
+                        state = self.stateMap[tuple(state)]
+                        ret = self.gamma**(steps) * rew + ret
+                        done = envTest.isDone()
+                        if done or steps > MAXSTEPS:
+                            doneFlag = True
+                            break
+
+                        optAct = self.getGreedyQopt(state, act)
+
+                    if doneFlag:
+                        break
+            allRet.append(ret)
+
+        mean = np.mean(allRet)
+        var = np.var(allRet)
+        var = var ** 0.5
+        return mean, var
+
+    def getGreedyQ(self, state):
+        qvals = self.Q[state, :]
+        maxvals = np.argwhere(qvals == np.amax(qvals)).flatten().tolist()
+        ind = np.random.randint(len(maxvals))
+        return maxvals[ind]
+
+    def getGreedyQOption(self, state, id):
+        qvals = self.Qopt[id][state, :]
+        maxvals = np.argwhere(qvals == np.amax(qvals)).flatten().tolist()
+        ind = np.random.randint(len(maxvals))
+        return maxvals[ind]
+
+    def savePolicy(self, path):
+        fp = open(path, "wb")
+        pickle.dump((self.Q, self.stateMap), fp)
+        fp.close()
+
+    def loadPolicy(self, path):
+        fp = open(path, "rb")
+        self.Q, self.stateMap = pickle.load(fp)
+        fp.close()

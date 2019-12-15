@@ -4,7 +4,7 @@ from copy import deepcopy
 
 
 from laplacian import Laplacian
-from successor import Successor
+from successor import IncSuccessor
 from env.env import gridWorld1
 from support.qlearner import SimpleQLearner
 from support.smdpqlearner import SimpleQLearnerOverOptions
@@ -21,14 +21,16 @@ def main():
     print("Env : " + str(num))
     env = gridWorld1(size=num)
     print("goal ", env.goal)
-    srModel = Successor(env)
+    srModel = IncSuccessor(env)
     render = False
 
     #  options are unavailable in first round 
     optionsAvailable = False
 
-    #  Each incremental iteratio
+    #  Each incremental iteration
     for itera in range(9):
+
+        #  Build successor representation with current set of options
         srModel.getSuccessor(optionsAvailable=optionsAvailable, render=render)
         srModel.getValidSuccessor()
         srModel.getReachedSuccessor()
@@ -57,6 +59,7 @@ def main():
         print("size", srModel.successor.shape)
         curMedoids = []
 
+        #  Iterate over every cluster center and learn policy
         for j, md in enumerate(srModel.medoids):
             print(j)
 

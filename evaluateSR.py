@@ -1,5 +1,6 @@
 """
 Script for evaluating the Successor options/Eigen-options
+built from the buildPolicies*.py files
 """
 import argparse
 import random
