@@ -21,16 +21,16 @@ Files and their utilities
 
 | File                    | Utility                                |
 |-------------------------|----------------------------------------|
-| diffTime                | Plots where the agent spends its time  |
-| eigenPolicies           | Get eigen options                      |
-| getPerformance          | Performance of the agent               |
-| laplacian               | Class defining eigen-options           |
-| successorPolicies       | Get SR-options                         |
+| buildIncrementalSR      | Code for building Inc-SR-options       |
+| buildPoliciesEigen      | Code for building Eigen-options        |
+| buildPoliciesSuccessor  | Code for building SR-options           |
 | successor               | Class defining SR-options              |
-| visualize               | Looks at the SR and Eigen-values       |
+| laplacian               | Class defining Eigen-options           |
+| visualize               | Class defining SR-options              |
+| evaluateSR              | Evluates SR options and Eigen-options  |
 | support/                | Helper functions for SR/Eigen options  |
-| randomTests/            | Some plots to test/validate ideas      |
-| env/                    | Gridworld environment wrapper          |
+| env/                    | Grid-world environment wrappe          |
 | data/                   | Folder to store policies               |
+| images/                 | Folder to store images                 |
 
 
