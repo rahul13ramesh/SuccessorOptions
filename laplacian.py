@@ -4,7 +4,6 @@ Class that defines Eigen-options
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-from pprint import pprint
 import pickle
 
 from support.plot3d import plot3d
@@ -117,7 +116,7 @@ class Laplacian(object):
 
     def saveEigenVec(self, path1, path2, path3):
         """
-        Save the eigenvector, eigenvalues and reward structure 
+        Save the eigenvector, eigenvalues and reward structure
         """
         np.savetxt(path1, self.eigenvals, delimiter=",")
         np.savetxt(path2, self.eigenvecs, delimiter=",")
@@ -127,7 +126,7 @@ class Laplacian(object):
 
     def loadEigenVecs(self, path1, path2, path3):
         """
-        Load the eigenvector, eigenvalues and reward structure 
+        Load the eigenvector, eigenvalues and reward structure
         """
         self.eigenvals = np.loadtxt(path1, delimiter=",")
         self.eigenvecs = np.loadtxt(path2, delimiter=",")

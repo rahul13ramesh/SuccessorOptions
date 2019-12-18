@@ -3,16 +3,12 @@
 Plot Eigen-policies and Successor policies
 """
 import numpy as np
-import matplotlib.pyplot as plt
-
 from laplacian import Laplacian
 from successor import Successor
 from env.env import gridWorld1
-from support.qlearner import SimpleQLearner
 
 
 def main():
-    iters = [int(50e4), int(50e4), int(20e7), int(10e7)]
 
     for i in range(4):
         num = i + 1

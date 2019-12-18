@@ -37,30 +37,40 @@ def main():
         pth = "data/dat" + str(args.env) + "/policies/"
 
         print("Option0")
-        qlearner1 = SmdpQlearner(env, optionPath=pth, optSize=0, gamma=0.99, plot=False)
+        qlearner1 = SmdpQlearner(env, optionPath=pth, optSize=0,
+                                 gamma=0.99, plot=False)
         qlearner1.train(iters=ITERS, evalNum=EVALNUM, policyPath="images/tmp1")
 
         print("Option5-Eigen")
-        qlearner2 = SmdpQlearner(env, optionPath=pth, optSize=OPTSIZE, gamma=0.99, plot=False)
+        qlearner2 = SmdpQlearner(env, optionPath=pth, optSize=OPTSIZE,
+                                 gamma=0.99, plot=False)
         qlearner2.train(iters=ITERS, evalNum=EVALNUM, policyPath="images/tmp2")
 
         print("Option5-SR")
-        qlearner3 = SmdpQlearner(env, optionPath=pth, optSize=OPTSIZE, gamma=0.99, plot=False, eigen=False)
+        qlearner3 = SmdpQlearner(env, optionPath=pth, optSize=OPTSIZE,
+                                 gamma=0.99, plot=False, eigen=False)
         qlearner3.train(iters=ITERS, evalNum=EVALNUM, policyPath="images/tmp3")
 
         print("Option5-Eigen-NU")
-        qlearner4 = SmdpQlearner(env, optionPath=pth, optSize=OPTSIZE, gamma=0.99, plot=False)
-        qlearner4.train(iters=ITERS, evalNum=EVALNUM, policyPath="images/tmp2", uniform=False, rat=args.ratio)
+        qlearner4 = SmdpQlearner(env, optionPath=pth, optSize=OPTSIZE,
+                                 gamma=0.99, plot=False)
+        qlearner4.train(iters=ITERS, evalNum=EVALNUM, policyPath="images/tmp2",
+                        uniform=False, rat=args.ratio)
 
         print("Option5-SR-NU")
-        qlearner5 = SmdpQlearner(env, optionPath=pth, optSize=OPTSIZE, gamma=0.99, plot=False, eigen=False)
-        qlearner5.train(iters=ITERS, evalNum=EVALNUM, policyPath="images/tmp3", uniform=False, rat=args.ratio)
+        qlearner5 = SmdpQlearner(env, optionPath=pth, optSize=OPTSIZE,
+                                 gamma=0.99, plot=False, eigen=False)
+        qlearner5.train(iters=ITERS, evalNum=EVALNUM, policyPath="images/tmp3",
+                        uniform=False, rat=args.ratio)
 
         print("Option5-SR-AE")
-        pklPath = "data/dat" + str(args.env) +  "/successorLabels" + str(args.env) + ".pkl"
-        qlearner5 = SmdpQlearner(env, optionPath=pth, optSize=OPTSIZE, gamma=0.99, plot=False, eigen=False)
-        qlearner5.train(iters=ITERS, evalNum=EVALNUM, policyPath="images/tmp3", uniform=False,
-                        rat=args.ratio, adaptive=True, adaPath = pklPath)
+        pklPath = "data/dat" + str(args.env) + \
+            "/successorLabels" + str(args.env) + ".pkl"
+        qlearner5 = SmdpQlearner(env, optionPath=pth, optSize=OPTSIZE,
+                                 gamma=0.99, plot=False, eigen=False)
+        qlearner5.train(iters=ITERS, evalNum=EVALNUM, policyPath="images/tmp3",
+                        uniform=False, rat=args.ratio,
+                        adaptive=True, adaPath=pklPath)
 
 
 if __name__ == '__main__':

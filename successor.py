@@ -6,7 +6,6 @@ import pickle
 import matplotlib.pyplot as plt
 from copy import deepcopy
 from tqdm import tqdm
-from pprint import pprint
 from bokeh import palettes
 
 from support.medoids import medoidCluster
@@ -69,7 +68,7 @@ class Successor(object):
             oneHot = np.zeros((len(self.keys)))
             oneHot[rowNum1] = 1
 
-            self.successor[rowNum1] = (1 - alpha) * self.successor[rowNum1] +  \
+            self.successor[rowNum1] = (1 - alpha) * self.successor[rowNum1] + \
                 alpha * (oneHot + gamma * self.successor[rowNum2])
 
         #  self.successor = self.successor/np.max(self.successor)
@@ -129,13 +128,15 @@ class Successor(object):
                 if t[i] == 0:
                     t[i] = 1
             #  Normalize the columns for effective clustering
-            validSuccessor = (validSuccessor - np.mean(validSuccessor, axis=0)) / t
+            validSuccessor = (validSuccessor - np.mean(validSuccessor,
+                                                       axis=0)) / t
 
         #  Cluster the representations of only filtered valid states
         distances = np.zeros((validState, validState))
         for i in range(validState):
             for j in range(validState):
-                distances[i, j] = self.dist(validSuccessor[i], validSuccessor[j])
+                distances[i, j] = self.dist(validSuccessor[i],
+                                            validSuccessor[j])
 
         self.clusterLabel = None
         if clusterType == 0:
@@ -143,29 +144,30 @@ class Successor(object):
         elif clusterType == 1:
             self.medoids = clusteringHeuristic(distances, k=numClusters)
         elif clusterType == 2:
-            self.medoids, self.clusterLabel = kmeansCluster(validSuccessor, k=numClusters)
+            self.medoids, self.clusterLabel = kmeansCluster(validSuccessor,
+                                                            k=numClusters)
 
         self.plotAllSubGoals(self.medoids, path)
 
         return self.medoids
-    
+
     def plotAllSubGoals(self, points, path):
         newMap = np.array(self.env.room)
-        height, width = len(newMap), len(newMap[0])
         room2 = 255 * (1 - np.array(self.env.room))
         room2 = np.transpose(np.array([room2, room2, room2]), [1, 2, 0])
-        newMap = np.transpose(np.array([10*newMap, 10*newMap, 20*newMap]), [1, 2, 0])
+        newMap = np.transpose(
+            np.array([10*newMap, 10*newMap, 20*newMap]), [1, 2, 0])
         newMap = newMap + room2
 
         coords = []
         for pt in points:
             coords.append(self.validMap[pt])
 
-        gap = int(float(250 - 110)/(len(points) + 1)) 
+        gap = int(float(250 - 110)/(len(points) + 1))
         pal = [palettes.Viridis256[x] for x in range(250, 110, -gap)]
         for j, pt in enumerate(coords):
             h = pal[j].lstrip('#')
-            rgb = tuple(int(h[k:k+2], 16) for k in (0, 2 ,4))
+            rgb = tuple(int(h[k:k+2], 16) for k in (0, 2, 4))
             newMap[pt[0], pt[1]] = np.array(rgb)
 
         def rect(pos):
@@ -178,8 +180,8 @@ class Successor(object):
         plt.axis('off')
         plt.subplots_adjust(bottom=0, top=1, left=0, right=1)
         #  for i in range(height):
-            #  for j in range(width):
-                #  rect(np.array((j, i)))
+        #  for j in range(width):
+        #  rect(np.array((j, i)))
 
         plt.savefig(path)
         plt.close()
@@ -244,21 +246,21 @@ class IncSuccessor(object):
         self.reachedStates = []
 
     def getSuccessor(self, alpha=0.1, gamma=1.0, iters=int(10e6),
-            optionsAvailable=False, render=False, itersteps=30000):
+                     optionsAvailable=False, render=False, itersteps=30000):
         """
         Returns the sucessor representations after obtaining samples from
         uniformly random policy
         """
-        # Reinitializing reachedStates and SR for each iteration
-        #self.reachedStates = []
-        #self.keys = self.keyInd.keys()
-        #self.successor = np.zeros((len(self.keys), len(self.keys)))
+        #  Reinitializing reachedStates and SR for each iteration
+        #  self.reachedStates = []
+        #  self.keys = self.keyInd.keys()
+        #  self.successor = np.zeros((len(self.keys), len(self.keys)))
         self.loadOptions("data/dat4/policies/", optionsAvailable)
         self.optSize = len(self.Qopt)
 
         for i in tqdm(range(itersteps)):
             steps = 0
-            rat = 50.0
+            #  rat = 50.0
             self.env.reset()
             state = self.env.pos
             if self.keyInd[tuple(state)] not in self.reachedStates:
@@ -282,7 +284,8 @@ class IncSuccessor(object):
                     while True:
                         prevState = list(state)
                         prevStateOption = int(stateOption)
-                        act = self.getGreedyQOption(prevStateOption, option_sampled - self.actionSize)
+                        act = self.getGreedyQOption(
+                            prevStateOption, option_sampled - self.actionSize)
 
                         # option needs to be terminated
                         if act == 0 or (self.Qopt[option_sampled - self.actionSize][prevStateOption, act] <= 0):
@@ -295,7 +298,8 @@ class IncSuccessor(object):
                             stateOption = self.stateMap[tuple(state)]
 
                             if self.keyInd[tuple(state)] not in self.reachedStates:
-                                self.reachedStates.append(self.keyInd[tuple(state)])
+                                self.reachedStates.append(
+                                    self.keyInd[tuple(state)])
 
                             """rowNum1 = self.keyInd[tuple(prevState)]
                             rowNum2 = self.keyInd[tuple(state)]
@@ -342,45 +346,47 @@ class IncSuccessor(object):
                 self.validStates += 1 - self.env.room[i][j]
 
         validState = 0
-        #validMap = []
+        # validMap = []
         self.validKeyInd = {}
         self.validRevMap = {}
         self.validSuccessor = np.zeros((self.validStates, len(self.keys)))
         for i in range(self.height):
             for j in range(self.width):
-                #validState += 1 - self.env.room[i][j]
+                # validState += 1 - self.env.room[i][j]
                 if self.env.room[i][j] == 0:
-                    #validMap.append(self.keyInd[(i, j)])
-                    self.validSuccessor[validState] = self.successor[self.keyInd[(i, j)]]
+                    # validMap.append(self.keyInd[(i, j)])
+                    self.validSuccessor[validState] = self.successor[self.keyInd[(
+                        i, j)]]
                     self.validKeyInd[(i, j)] = validState
                     self.validRevMap[validState] = (i, j)
                     validState += 1
 
-        #validSuccessor = self.successor[validMap][:, validMap]
-
-        #self.validSuccessor = validSuccessor
+        # validSuccessor = self.successor[validMap][:, validMap]
+        # self.validSuccessor = validSuccessor
 
     def getReachedSuccessor(self, ):
 
         reachedState = 0
         self.reachedKeyInd = {}
         self.reachedRevMap = {}
-        self.reachedSuccessor = np.zeros((len(self.reachedStates), len(self.keys)))
+        self.reachedSuccessor = np.zeros(
+            (len(self.reachedStates), len(self.keys)))
         for i in range(self.height):
             for j in range(self.width):
                 if self.keyInd[(i, j)] in self.reachedStates:
-                    self.reachedSuccessor[reachedState] = self.successor[self.keyInd[(i, j)]]
+                    self.reachedSuccessor[reachedState] = self.successor[self.keyInd[(
+                        i, j)]]
                     self.reachedKeyInd[(i, j)] = reachedState
                     self.reachedRevMap[reachedState] = (i, j)
                     reachedState += 1
 
         print("number of reached states", len(self.reachedStates))
-        #reachedSuccessor = self.successor[self.reachedStates]#[:, self.reachedStates]
+        # reachedSuccessor = self.successor[self.reachedStates]#[:, self.reachedStates]
 
         #self.reachedSuccessor = reachedSuccessor
 
     def saveSuccessor(self, path):
-            np.savetxt(path, self.successor, delimiter=",")
+        np.savetxt(path, self.successor, delimiter=",")
 
     def loadSuccessor(self, path):
         self.successor = np.loadtxt(path, delimiter=",")
@@ -421,13 +427,15 @@ class IncSuccessor(object):
         srSum = np.sum(self.reachedSuccessor, axis=1)
         srLowerQuartile = np.percentile(srSum, numLow)
         srUpperQuartile = np.percentile(srSum, numHigh)
-        self.rareStates = np.asarray(np.where((srSum < srUpperQuartile) & (srSum > srLowerQuartile))).squeeze()
+        self.rareStates = np.asarray(
+            np.where((srSum < srUpperQuartile) & (srSum > srLowerQuartile))).squeeze()
 
-        #self.rareStates = np.argsort(np.sum(self.reachedSuccessor, axis=1))#[:20]
+        # self.rareStates = np.argsort(np.sum(self.reachedSuccessor, axis=1))#[:20]
 
         self.rareStatesSuccessor = []
         for j in range(len(self.rareStates)):
-            self.rareStatesSuccessor.append(self.validSuccessor[self.validKeyInd[self.reachedRevMap[self.rareStates[j]]]])
+            self.rareStatesSuccessor.append(
+                self.validSuccessor[self.validKeyInd[self.reachedRevMap[self.rareStates[j]]]])
 
         self.rareStatesSuccessor = np.array(self.rareStatesSuccessor)
 
@@ -438,21 +446,21 @@ class IncSuccessor(object):
         Cluster the successor representations into clusters using k-medoids
         """
         #  Get set of states which are not boundaries
-        #validState = 0
-        #for i in range(self.height):
-        #    for j in range(self.width):
-        #        validState += 1 - self.env.room[i][j]
+        # validState = 0
+        # for i in range(self.height):
+        #     for j in range(self.width):
+        #         validState += 1 - self.env.room[i][j]
 
         validSuccessor = self.rareStatesSuccessor
         validState = validSuccessor.shape[0]
-        #validSuccessor = np.zeros((validState, len(self.keys)))
-        #self.validMap = {}
-        #ct = 0
-        #for i in range(self.height):
-        #  for j in range(self.width):
-        #      if self.env.room[i][j] == 0:
-        #          self.validMap[ct] = (i, j)
-        #          ct += 1
+        # validSuccessor = np.zeros((validState, len(self.keys)))
+        # self.validMap = {}
+        # ct = 0
+        # for i in range(self.height):
+        #     for j in range(self.width):
+        #         if self.env.room[i][j] == 0:
+        #             self.validMap[ct] = (i, j)
+        #             ct += 1
 
         if normMethod == 0:
             pass
@@ -464,13 +472,15 @@ class IncSuccessor(object):
                 if t[i] == 0:
                     t[i] = 1
             #  Normalize the columns for effective clustering
-            validSuccessor = (validSuccessor - np.mean(validSuccessor, axis=0)) / t
+            validSuccessor = (
+                validSuccessor - np.mean(validSuccessor, axis=0)) / t
 
         #  Cluster the representations of only filtered valid states
         distances = np.zeros((validState, validState))
         for i in range(validState):
             for j in range(validState):
-                distances[i, j] = self.dist(validSuccessor[i], validSuccessor[j])
+                distances[i, j] = self.dist(
+                    validSuccessor[i], validSuccessor[j])
 
         if clusterType == 0:
             points, self.medoids = medoidCluster(distances, k=numClusters)
@@ -478,17 +488,18 @@ class IncSuccessor(object):
             self.medoids = clusteringHeuristic(distances, k=numClusters)
             print(self.medoids)
         elif clusterType == 2:
-            self.medoids = kmeansCluster(validSuccessor, self.rareStates, k=numClusters)
+            self.medoids = kmeansCluster(
+                validSuccessor, self.rareStates, k=numClusters)
 
         self.plotAllSubGoals(self.medoids, path)
         return self.medoids
 
     def plotAllSubGoals(self, points, path):
         newMap = np.array(self.env.room)
-        height, width = len(newMap), len(newMap[0])
         room2 = 255 * (1 - np.array(self.env.room))
         room2 = np.transpose(np.array([room2, room2, room2]), [1, 2, 0])
-        newMap = np.transpose(np.array([10*newMap, 10*newMap, 20*newMap]), [1, 2, 0])
+        newMap = np.transpose(
+            np.array([10*newMap, 10*newMap, 20*newMap]), [1, 2, 0])
         newMap = newMap + room2
 
         coords = []
@@ -509,8 +520,8 @@ class IncSuccessor(object):
         plt.axis('off')
         plt.subplots_adjust(bottom=0, top=1, left=0, right=1)
         #  for i in range(height):
-            #  for j in range(width):
-                #  rect(np.array((j, i)))
+        #  for j in range(width):
+        #  rect(np.array((j, i)))
 
         plt.savefig(path)
         plt.close()
@@ -553,17 +564,17 @@ class IncSuccessor(object):
             eigenMat[node[0] - 1, node[1] - 1] = val
             eigenMat2[node[0] - 1, node[1] - 1] = val
         plot3d(eigenMat, path)
-        #plt.imshow(eigenMat2, cmap=plt.get_cmap("viridis"), origin='lower')
-        #plt.axis('off')
-        #plt.savefig(path)
-        #plt.close()
+        # plt.imshow(eigenMat2, cmap=plt.get_cmap("viridis"), origin='lower')
+        # plt.axis('off')
+        # plt.savefig(path)
+        # plt.close()
 
     def plotSuccessorMagnitudes(self, path=None):
         newMap = np.array(self.env.room)
-        height, width = len(newMap), len(newMap[0])
         room2 = 255 * (1 - np.array(self.env.room))
         room2 = np.transpose(np.array([room2, room2, room2]), [1, 2, 0])
-        newMap = np.transpose(np.array([10*newMap, 10*newMap, 20*newMap]), [1, 2, 0])
+        newMap = np.transpose(np.array([10*newMap, 10*newMap, 20*newMap]),
+                              [1, 2, 0])
         newMap = newMap + room2
 
         pal = palettes.Viridis256

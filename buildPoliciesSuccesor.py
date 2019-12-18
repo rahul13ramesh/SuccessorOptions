@@ -3,15 +3,9 @@
 Get the policies for the sr-options
 """
 
-import matplotlib
 import argparse
-import numpy as np
 import matplotlib.pyplot as plt
-from copy import deepcopy
 from multiprocessing import Pool
-
-
-from laplacian import Laplacian
 from successor import Successor
 from env.env import gridWorld1
 from support.qlearner import SimpleQLearner
@@ -20,6 +14,7 @@ from support.qlearner import SimpleQLearner
 plt.switch_backend('agg')
 srModel = None
 global srModel, env, globNum
+
 
 def buildSRPolicy(j):
     global srModel, env, globNum
@@ -30,8 +25,11 @@ def buildSRPolicy(j):
     rew = srModel.successor[pt]
     Qlearner = SimpleQLearner(env, rew, srModel.keyInd)
     Qlearner.train(titers[globNum-1])
-    Qlearner.plotPolicy("images/policies" + str(globNum) + "/srpolicy" + str(j) + ".png")
-    Qlearner.savePolicy("data/dat" + str(globNum) + "/policies/srpolicy" + str(j) + ".csv")
+    Qlearner.plotPolicy("images/policies" + str(globNum) + "/srpolicy"
+                        + str(j) + ".png")
+    Qlearner.savePolicy("data/dat" + str(globNum) + "/policies/srpolicy"
+                        + str(j) + ".csv")
+
 
 def main():
     parser = argparse.ArgumentParser(description='Get SR policies')
@@ -59,6 +57,7 @@ def main():
 
         procPool = Pool(12)
         procPool.map(buildSRPolicy, range(len(srModel.medoids)))
+
 
 if __name__ == '__main__':
     main()

@@ -42,4 +42,3 @@ def plot3d(mat, path):
     else:
         plt.savefig(path)
         plt.close()
-
