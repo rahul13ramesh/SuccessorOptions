@@ -9,28 +9,14 @@
 
 ![Successor Options overview](./assets/intro.png)
 
-* To install all required packages run 
-
+* Install the gym-robotics environments from [gym](https://gym.openai.com/envs/#robotics)
+* The code uses the [Stable baselines](https://github.com/hill-a/stable-baselines)
+* To get the set of configurations to run the code in:
 ```
-pip install -r requirements.txt
+python3 qlearning/main.py -h
 ```
 
-
-Files and their utilities
-=========================
-
-| File                    | Utility                                |
-|-------------------------|----------------------------------------|
-| buildIncrementalSR      | Code for building Inc-SR-options       |
-| buildPoliciesEigen      | Code for building Eigen-options        |
-| buildPoliciesSuccessor  | Code for building SR-options           |
-| successor               | Class defining SR-options              |
-| laplacian               | Class defining Eigen-options           |
-| visualize               | Class defining SR-options              |
-| evaluateSR              | Evluates SR options and Eigen-options  |
-| support/                | Helper functions for SR/Eigen options  |
-| env/                    | Grid-world environment wrappe          |
-| data/                   | Folder to store policies               |
-| images/                 | Folder to store images                 |
-
+* Use the successor_collect flag followed by the  successor_learn flag.
+  The former builds the successor representation while the latter learns
+  the successor options.
 

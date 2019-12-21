@@ -1,8 +1,0 @@
-matplotlib
-bokeh==1.4.0
-seaborn==0.9.0
-pandas==0.25.3
-tqdm==4.40.1
-numpy==1.17.4
-argparse
-scikit-learn==0.22
