@@ -11,6 +11,7 @@ from bokeh import palettes
 from support.medoids import medoidCluster
 from support.medoids import clusteringHeuristic
 from support.medoids import kmeansCluster
+from support.medoids import kmeansClusterInc
 from support.plot3d import plot3d
 
 
@@ -488,7 +489,7 @@ class IncSuccessor(object):
             self.medoids = clusteringHeuristic(distances, k=numClusters)
             print(self.medoids)
         elif clusterType == 2:
-            self.medoids = kmeansCluster(
+            self.medoids = kmeansClusterInc(
                 validSuccessor, self.rareStates, k=numClusters)
 
         self.plotAllSubGoals(self.medoids, path)

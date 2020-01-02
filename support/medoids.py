@@ -65,6 +65,32 @@ def kmeansCluster(data, k=3):
     return curMedoids, valCounts
 
 
+def kmeansClusterInc(data, map, k=3, init='random'):
+    assert(k >= 1)
+
+    m = data.shape[0]  # number of points
+    print("data", data.shape)
+    model = KMeans(n_clusters=k)
+    clusterLabel = model.fit_predict(data)
+    centers = model.cluster_centers_
+
+    curMedoidsTmp = [(-1, float("inf")) for i in range(k)]
+
+    for l in range(k):
+        for i in range(m):
+            if clusterLabel[i] == l:
+                dist = np.sum(np.square(data[i] - centers[l]))
+                if curMedoidsTmp[l][1] > dist:
+                    curMedoidsTmp[l] = (map[i], dist)
+
+    print(curMedoidsTmp)
+    curMedoids = []
+    for p, q in curMedoidsTmp:
+        curMedoids.append(p)
+
+    return curMedoids
+
+
 def medoidCluster(distances, k=3):
     """
     Cluster using k-medoids
