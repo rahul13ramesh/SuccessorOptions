@@ -11,7 +11,7 @@ from env.roomDeepmind1 import roomDeep
 
 class gridWorld1(object):
 
-    def __init__(self, size):
+    def __init__(self, size, incremental=False):
         if size == 1:
             self.room = roomPend
         elif size == 2:
@@ -20,9 +20,12 @@ class gridWorld1(object):
             self.room = roomArr
         else:
             self.room = roomDeep
-        self.start = [1, 1]
-        self.done = False
 
+        self.incremental = incremental
+        self.start = [1, 1]
+        self.steps = 0
+
+        self.done = False
         self.count = 0
         self.actionSpace()
         self.height = len(self.room)
@@ -32,7 +35,11 @@ class gridWorld1(object):
         self.resetGoal()
 
     def reset(self):
-        self.pos = self.start
+        if self.incremental:
+            self.pos = [1, 1]
+            self.steps = 0
+        else:
+            self.pos = self.start
         self.count = 0
         self.done = False
         return self.pos
@@ -86,6 +93,11 @@ class gridWorld1(object):
         if tuple(self.pos) == tuple(self.goal):
             rew = 10
             self.done = True
+
+        if self.incremental:
+            self.steps += 1
+            if self.steps >= 100:
+                self.done = True
         return self.pos, rew
 
     def isDone(self):

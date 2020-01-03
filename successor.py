@@ -180,9 +180,6 @@ class Successor(object):
         plt.imshow(newMap, origin='lower')
         plt.axis('off')
         plt.subplots_adjust(bottom=0, top=1, left=0, right=1)
-        #  for i in range(height):
-        #  for j in range(width):
-        #  rect(np.array((j, i)))
 
         plt.savefig(path)
         plt.close()
@@ -247,15 +244,12 @@ class IncSuccessor(object):
         self.reachedStates = []
 
     def getSuccessor(self, alpha=0.1, gamma=1.0, iters=int(10e6),
-                     optionsAvailable=False, render=False, itersteps=30000):
+                     optionsAvailable=False, render=False, itersteps=3):
         """
         Returns the sucessor representations after obtaining samples from
         uniformly random policy
         """
         #  Reinitializing reachedStates and SR for each iteration
-        #  self.reachedStates = []
-        #  self.keys = self.keyInd.keys()
-        #  self.successor = np.zeros((len(self.keys), len(self.keys)))
         self.loadOptions("data/dat4/policies/", optionsAvailable)
         self.optSize = len(self.Qopt)
 
@@ -302,15 +296,6 @@ class IncSuccessor(object):
                                 self.reachedStates.append(
                                     self.keyInd[tuple(state)])
 
-                            """rowNum1 = self.keyInd[tuple(prevState)]
-                            rowNum2 = self.keyInd[tuple(state)]
-
-                            oneHot = np.zeros((len(self.keys)))
-                            oneHot[rowNum1] = 1
-
-                            self.successor[rowNum1] = (1 - alpha) * self.successor[rowNum1] +  \
-                                    alpha * (oneHot + gamma * self.successor[rowNum2])"""
-
                             if self.env.isDone():
                                 break
 
@@ -347,23 +332,16 @@ class IncSuccessor(object):
                 self.validStates += 1 - self.env.room[i][j]
 
         validState = 0
-        # validMap = []
         self.validKeyInd = {}
         self.validRevMap = {}
         self.validSuccessor = np.zeros((self.validStates, len(self.keys)))
         for i in range(self.height):
             for j in range(self.width):
-                # validState += 1 - self.env.room[i][j]
                 if self.env.room[i][j] == 0:
-                    # validMap.append(self.keyInd[(i, j)])
-                    self.validSuccessor[validState] = self.successor[self.keyInd[(
-                        i, j)]]
+                    self.validSuccessor[validState] = self.successor[self.keyInd[(i, j)]]
                     self.validKeyInd[(i, j)] = validState
                     self.validRevMap[validState] = (i, j)
                     validState += 1
-
-        # validSuccessor = self.successor[validMap][:, validMap]
-        # self.validSuccessor = validSuccessor
 
     def getReachedSuccessor(self, ):
 
@@ -375,16 +353,12 @@ class IncSuccessor(object):
         for i in range(self.height):
             for j in range(self.width):
                 if self.keyInd[(i, j)] in self.reachedStates:
-                    self.reachedSuccessor[reachedState] = self.successor[self.keyInd[(
-                        i, j)]]
+                    self.reachedSuccessor[reachedState] = self.successor[self.keyInd[(i, j)]]
                     self.reachedKeyInd[(i, j)] = reachedState
                     self.reachedRevMap[reachedState] = (i, j)
                     reachedState += 1
 
         print("number of reached states", len(self.reachedStates))
-        # reachedSuccessor = self.successor[self.reachedStates]#[:, self.reachedStates]
-
-        #self.reachedSuccessor = reachedSuccessor
 
     def saveSuccessor(self, path):
         np.savetxt(path, self.successor, delimiter=",")
@@ -431,8 +405,6 @@ class IncSuccessor(object):
         self.rareStates = np.asarray(
             np.where((srSum < srUpperQuartile) & (srSum > srLowerQuartile))).squeeze()
 
-        # self.rareStates = np.argsort(np.sum(self.reachedSuccessor, axis=1))#[:20]
-
         self.rareStatesSuccessor = []
         for j in range(len(self.rareStates)):
             self.rareStatesSuccessor.append(
@@ -446,22 +418,9 @@ class IncSuccessor(object):
         """
         Cluster the successor representations into clusters using k-medoids
         """
-        #  Get set of states which are not boundaries
-        # validState = 0
-        # for i in range(self.height):
-        #     for j in range(self.width):
-        #         validState += 1 - self.env.room[i][j]
 
         validSuccessor = self.rareStatesSuccessor
         validState = validSuccessor.shape[0]
-        # validSuccessor = np.zeros((validState, len(self.keys)))
-        # self.validMap = {}
-        # ct = 0
-        # for i in range(self.height):
-        #     for j in range(self.width):
-        #         if self.env.room[i][j] == 0:
-        #             self.validMap[ct] = (i, j)
-        #             ct += 1
 
         if normMethod == 0:
             pass
@@ -520,9 +479,6 @@ class IncSuccessor(object):
         plt.imshow(newMap, origin='lower')
         plt.axis('off')
         plt.subplots_adjust(bottom=0, top=1, left=0, right=1)
-        #  for i in range(height):
-        #  for j in range(width):
-        #  rect(np.array((j, i)))
 
         plt.savefig(path)
         plt.close()
@@ -550,25 +506,6 @@ class IncSuccessor(object):
         plt.axis('off')
         plt.savefig(path1)
         plt.close()
-
-    def plotSingleEigen(self, eigenNum, path):
-        sortedind = np.argsort(self.eigenvals)[::-1]
-        height = len(self.env.room)
-        width = len(self.env.room[0])
-
-        i = eigenNum
-        row = self.eigenvecs[:, sortedind[i]]
-        eigenMat = np.zeros((height - 2, width - 2))
-        eigenMat2 = eigenMat * np.nan
-        for i, val in enumerate(row):
-            node = self.validRevMap[i]
-            eigenMat[node[0] - 1, node[1] - 1] = val
-            eigenMat2[node[0] - 1, node[1] - 1] = val
-        plot3d(eigenMat, path)
-        # plt.imshow(eigenMat2, cmap=plt.get_cmap("viridis"), origin='lower')
-        # plt.axis('off')
-        # plt.savefig(path)
-        # plt.close()
 
     def plotSuccessorMagnitudes(self, path=None):
         newMap = np.array(self.env.room)

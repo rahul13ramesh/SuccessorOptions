@@ -15,7 +15,7 @@ def main():
     assert(env_num >= 1 and env_num <= 4)
 
     print("Env : " + str(env_num))
-    env = gridWorld1(size=env_num)
+    env = gridWorld1(size=env_num, incremental=True)
     print("goal ", env.goal)
     srModel = IncSuccessor(env)
     render = False

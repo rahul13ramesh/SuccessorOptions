@@ -12,8 +12,8 @@ from support.qlearner import SimpleQLearner
 
 
 plt.switch_backend('agg')
-srModel = None
 global srModel, env, globNum
+srModel = None
 
 
 def buildSRPolicy(j):
