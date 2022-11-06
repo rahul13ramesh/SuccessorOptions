@@ -1,12 +1,11 @@
+
 # Successor Options
 
-* Code for the paper [Successor Options](https://www.ijcai.org/proceedings/2019/0458.pdf)
-* Generates options that navigate to *prototypical states* of well
-  connected regions. These states are typically representatives of
-  well-connected regions.
-* Successor options implicitly clusters the state space into different
-  regions and has each option navigating to a different region.
+This repo contains code for the paper [Successor Options](https://www.ijcai.org/proceedings/2019/0458.pdf)
 
+Our method clusters the state space into different regions and learns options navigating to each of these clusters.
+
+   
 ![Successor Options overview](./assets/intro.png)
 
 * To install all required packages run 
@@ -32,5 +31,3 @@ Files and their utilities
 | env/                    | Grid-world environment wrappe          |
 | data/                   | Folder to store policies               |
 | images/                 | Folder to store images                 |
-
-
